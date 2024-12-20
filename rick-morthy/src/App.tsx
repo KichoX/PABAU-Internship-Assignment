@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import { useQuery, gql } from '@apollo/client';
 
-// GraphQL query to fetch characters with pagination, filtering, and sorting
+// GraphQL query
 const GET_DATA = gql`
-  query GetData($page: Int, $status: String, $species: String) {
+  query getCharacters($page: Int, $status: String, $species: String) {
     characters(page: $page, filter: { status: $status, species: $species }) {
       results {
         id
@@ -16,68 +16,111 @@ const GET_DATA = gql`
           name
         }
       }
+      info {
+        next
+      }
     }
   }
 `;
 
-const App = () => {
+function App() {
   const [page, setPage] = useState(1);
+  const [characters, setCharacters] = useState<any[]>([]);
   const [status, setStatus] = useState('Alive');
   const [species, setSpecies] = useState('Human');
-
   const { loading, error, data } = useQuery(GET_DATA, {
     variables: { page, status, species },
+    fetchPolicy: 'network-only', // Force fetching fresh data
   });
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error! {error.message}</div>;
+  const observer = useRef<IntersectionObserver | null>(null);
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+  // Handle fetching new characters when data changes
+  useEffect(() => {
+    if (data && data.characters.results) {
+      setCharacters((prevCharacters) => [
+        ...prevCharacters,
+        ...data.characters.results,
+      ]);
+    }
+  }, [data]);
+
+  const loadMore = () => {
+    if (data && data.characters.info.next) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const lastCharacterRef = (node: any) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 1.0 }
+    );
+    if (node) observer.current.observe(node);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(e.target.value);
+    setPage(1);
+    setCharacters([]);
+  };
+
+  const handleSpeciesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSpecies(e.target.value);
+    setPage(1);
+    setCharacters([]);
   };
 
   return (
     <div className="App">
-      <h1>Rick and Morty Characters</h1>
-
       <div className="filters">
-        <label>Status: </label>
-        <select onChange={(e) => setStatus(e.target.value)} value={status}>
-          <option value="Alive">Alive</option>
-          <option value="Dead">Dead</option>
-          <option value="Unknown">Unknown</option>
-        </select>
-
-        <label>Species: </label>
-        <select onChange={(e) => setSpecies(e.target.value)} value={species}>
-          <option value="Human">Human</option>
-          <option value="Alien">Alien</option>
-          <option value="Humanoid">Humanoid</option>
-        </select>
+        <label>
+          Status:
+          <select value={status} onChange={handleStatusChange}>
+            <option value="Alive">Alive</option>
+            <option value="Dead">Dead</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </label>
+        <label>
+          Species:
+          <select value={species} onChange={handleSpeciesChange}>
+            <option value="Human">Human</option>
+            <option value="Alien">Alien</option>
+            <option value="Humanoid">Humanoid</option>
+          </select>
+        </label>
       </div>
 
-      <div className="characters">
-        {data.characters.results.map((character: any) => (
-          <div key={character.id} className="character-card">
-            <h3>{character.name}</h3>
-            <p><strong>Status:</strong> {character.status}</p>
-            <p><strong>Species:</strong> {character.species}</p>
-            <p><strong>Gender:</strong> {character.gender}</p>
-            <p><strong>Origin:</strong> {character.origin.name}</p>
-          </div>
-        ))}
+      <div className="characters-container">
+        {characters.map((character: any, index: number) => {
+          const isLastCharacter = characters.length === index + 1;
+          return (
+            <div
+              ref={isLastCharacter ? lastCharacterRef : null}
+              key={character.id}
+              className="character-card"
+            >
+              <h3>{character.name}</h3>
+              <p>Status: {character.status}</p>
+              <p>Species: {character.species}</p>
+              <p>Gender: {character.gender}</p>
+              <p>Origin: {character.origin.name}</p>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="pagination">
-        <button onClick={() => handlePageChange(page - 1)} disabled={page <= 1}>
-          Previous
-        </button>
-        <button onClick={() => handlePageChange(page + 1)}>
-          Next
-        </button>
-      </div>
+      {loading && <p className="loading">Loading more characters...</p>}
+      {error && <p className="error">Error loading characters.</p>}
     </div>
   );
-};
+}
 
 export default App;

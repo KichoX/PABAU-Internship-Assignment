@@ -5,18 +5,60 @@
   }
   
   .filters {
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 30px auto;
+    font-family: 'Arial', sans-serif;
   }
   
   .filters label {
-    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: #444;
+    font-weight: 500;
+    text-transform: capitalize;
   }
-
+  
+  .filters select {
+    margin-top: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f4f4f4;
+    color: #333;
+    transition: border-color 0.3s, background-color 0.3s;
+    width: 150px;
+  }
+  
+  .filters select:hover,
+  .filters select:focus {
+    border-color: #4CAF50;
+    background-color: #e7f9e7;
+    outline: none;
+  }
+  
+  .filters select option {
+    padding: 8px;
+  }
+  
+  
   .characters-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+    align-items: center;
+    margin-bottom: 50px;
   }
   
   .character-card {
@@ -33,25 +75,20 @@
   }
   
   .character-card:hover {
-    transform: translateY(-10px)
-  }  
-  
-  .pagination button {
-    margin: 5px;
-    padding: 10px;
-    cursor: pointer;
+    transform: translateY(-10px);
   }
   
-  .pagination button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  .loading {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
   }
   
-  .character-card h3 {
-    margin: 0;
-  }
-  
-  .character-card p {
-    margin: 5px 0;
+  .error {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff6b6b;
+    text-align: center;
   }
   
