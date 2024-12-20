@@ -11,31 +11,14 @@ let client = new ApolloClient ({
   cache: new InMemoryCache(),
 });
 
-client.query ({
-  query: gql `query {
-    characters(page: 1, filter: { status: "Alive", species: "Human" }) {
-      results {
-        id
-        name
-        status
-        species
-        gender
-        origin {
-          name
-        }
-      }
-    }
-  }
-  `
-}).then((result) => {console.log(result)});
-
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <ApolloProvider client={client} >
+      <App />
+    </ApolloProvider>
   </React.StrictMode>
 );
 
